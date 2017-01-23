@@ -1,0 +1,15 @@
+<% var title = 'Profile' %>
+<% include head %>
+
+<h1> Bienvenue à toi, <%=prenom %> </h1>
+<br/>
+<img src="<%= profilepic%>" width="100" height="100" value="<%= profilepic%>"/>
+<br/>
+
+<a href="/editProfile">Modifier votre profile</a>
+</br></br>
+<a href="/deleteAccount">Supprimer votre compte</a>
+</br></br>
+<a href="/logout">Déconnexion</a>
+
+<% include foot.ejs %>
