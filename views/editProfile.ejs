@@ -66,42 +66,6 @@
 
             />
         </li>
-        <!-- SEXE -->
-        <br>
-        <label>Sexe :</label>
-        <input type="radio" name="sexe" id="homme"/>Homme</br>
-        <input type="radio" name="sexe" id="femme"/>Femme
-        </li>
-        <!-- DATE DE NAISSANCE -->
-        <li>
-            <label for="birthdate">Date de naissance:</label>
-            <input type="date" name="birthdate" id="birthdate" placeholder="JJ/MM/AAAA" onchange="computeAge()"/>
-            <script>
-                computeAge = function(e) {
-                    try{
-                        // j'affiche dans la console quelques objets javascript, ce qui devrait vous aider.
-                        console.log(Date.now());
-                        console.log(document.getElementById("birthdate"));
-                        console.log(document.getElementById("birthdate").valueAsDate);
-                        console.log(Date.parse(document.getElementById("birthdate").valueAsDate));
-                        console.log(new Date(0).getYear());
-                        console.log(new Date(65572346585).getYear());
-                        document.getElementById("age").value = Math.floor((Date.now() - Date.parse(document.getElementById("birthdate").valueAsDate)) / (365.25 * 24 * 60 * 60 * 1000));
-                    } catch(e) {
-                        document.getElementById("age").value = '';
-                    }
-                }
-            </script>
-            <span class="form_hint">Format attendu "JJ/MM/AAAA"</span>
-        </li>
-        <!-- AGE -->
-        <li>
-            <label for="age">Age:</label>
-            <input type="number" name="age" id="age"
-                   disabled/>
-            <!-- à quoi sert l'attribut disabled ? -->
-            <!-- disabled: sert à grisé la partie pour rendre le champs insaisissable -->
-        </li>
         <!-- VILLE -->
         <li>
             <label for="ville">Ville :</label>

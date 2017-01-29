@@ -19,6 +19,26 @@ app.listen(1313);
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
+// Base de donnée --> Connection Simple
+var mysql = require('mysql');
+
+
+var connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'pictionnary'
+});
+
+connection.connect();
+
+connection.query('SELECT * FROM users', function (err, rows) {
+    if (!err)
+        logger.info('Le résultat de la requête: ', rows);
+    else
+        logger.error(err);
+});
+
 
 // On affiche le formulaire d'enregistrement
 
@@ -34,14 +54,22 @@ app.post('/login', function (req, res) {
     // TODO vérifier si l'utilisateur existe
     var username = req.body.username;
     var password = req.body.password;
-    if (username != "" && password != "")
+    if (username != "" && password != "" && username != "admin@admin.fr")
     {
         login(username, password, res);
     }
     else
     {
-        res.redirect('/login');
+        if (username == "admin@admin.fr" && password != "")
+        {
+            admin(username, password, res);
+        }
+        else
+        {
+            res.redirect('/login');
+        }
     }
+
 });
 
 app.get('/register', function(req, res){
@@ -95,47 +123,47 @@ app.get('/profile', function (req, res) {
             email: session.email,
             nom: session.nom,
             prenom: session.prenom,
-            profilepic: session.profilepic,
+            profilepic: session.profilepic
     });
-	res.redirect('/login');
+	//res.redirect('/login');
     }
 });
 
-app.get('/editProfile'), function (req, res) {
-    if (session.valid) {
-        res.render('editProfile');
+app.get('/editProfile', function (req, res) {
+    // TODO
+    // On redirige vers le login si l'utilisateur n'a pas été authentifier
+    // Afficher le button logout
+    if(session.open = true)
+    {
+        res.render('editProfile', {
+            email: session.email,
+            nom: session.nom,
+            prenom: session.prenom,
+            profilepic: session.profilepic
+        });
+        res.redirect('/login');
     }
-    else {
-        res.redirect("/login");
-    }
-
-}
+});
 
 app.post('/editProfile', function (req, res) {
     // TODO modifier un profile utilisateur
-    var id = req.body.id;
     var email = req.body.email;
     var password = req.body.password;
     var nom = req.body.nom;
     var prenom = req.body.prenom;
     var tel = req.body.tel;
     var website = req.body.website;
-    var sexe = req.body.sexe;
-    var birthdate = req.body.birthdate;
     var ville = req.body.ville;
     var taille = req.body.taille;
     var couleur = req.body.couleur.substring(1,req.body.couleur.length);
     var profilepic = req.body.profilepic;
     var personne = {
-        id:id,
         email:email,
         password:password,
         nom:nom,
         prenom:prenom,
         tel:tel,
         website:website,
-        sexe:sexe,
-        birthdate:birthdate,
         ville:ville,
         taille:taille,
         couleur:couleur,
@@ -145,29 +173,139 @@ app.post('/editProfile', function (req, res) {
 });
 
 app.get('/deleteAccount', function(req, res) {
-    var id = req.body.id;
-   deleteAccount(id, res);
+    if(session.email == null)
+    {
+        res.redirect('/login');
+    }
+   deleteAccount();
 });
 
-// Base de donnée --> Connection Simple
-var mysql = require('mysql');
-
-
-var connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'pictionnary'
+app.get('/paint', function (req, res) {
+    res.render('paint', {
+        couleur: session.couleur
+    });
 });
 
-connection.connect();
-
-connection.query('SELECT * FROM users', function (err, rows) {
-    if (!err)
-        logger.info('Le résultat de la requête: ', rows);
-    else
-        logger.error(err);
+/*
+app.get('/paint', function(req, res) {
+    if(session.open = true) {
+        connection.query("  SELECT *" +
+            "               FROM drawings",
+            function (err, rows) {
+                if (!err) {
+                    logger.info('La liste des paintures: ', rows);
+                    res.render('paint', {
+                        email: session.email,
+                        prenom: session.prenom,
+                        profilepic: session.profilepic,
+                        couleur: session.couleur,
+                        painting: rows
+                    })
+                }
+            });
+    }
 });
+*/
+/*
+app.post('/paint', function(req, res) {
+    var commands = req.body.commands;
+    var picture = req.body.picture;
+    var id = session.id;
+    var design = {
+        commands: commands,
+        picture: picture,
+        id: id
+    };
+    paint(design)
+});
+*/
+app.get('/admin', function (req, res) {
+    if(session.open = true) {
+        connection.query("  SELECT prenom " +
+            "               FROM users",
+            function (err, rows) {
+                if (!err) {
+                    logger.info('La liste des utilisateurs: ', rows);
+                    res.render('admin', {
+                        email: session.email,
+                        prenom: session.prenom,
+                        profilepic: session.profilepic,
+                        users: rows
+                    })
+                }
+        });
+    }
+});
+/*
+app.get('/setUsers', function (req, res) {
+    if(session.open = true)
+    {
+        var users = "";
+        connection.query("  SELECT * " +
+            "               FROM users",
+            function (err, rows) {
+                if (!err) {
+                    users = rows;
+                    for(var i = 0 ; i < users.length ; i++) {
+                        logger.info('prenom: ', users[i].prenom);
+                        res.render('editProfile', {
+                            email: session.email,
+                            nom: users[i].nom,
+                            prenom: users[i].prenom,
+                            profilepic: session.profilepic
+                        });
+                    }
+                }
+            });
+    }
+});
+
+app.post('/setUsers', function (req, res) {
+    // TODO modifier un profile utilisateur
+    var email = req.body.email;
+    var password = req.body.password;
+    var nom = req.body.nom;
+    var prenom = req.body.prenom;
+    var tel = req.body.tel;
+    var website = req.body.website;
+    var ville = req.body.ville;
+    var taille = req.body.taille;
+    var couleur = req.body.couleur.substring(1,req.body.couleur.length);
+    var profilepic = req.body.profilepic;
+    var personne = {
+        email:email,
+        password:password,
+        nom:nom,
+        prenom:prenom,
+        tel:tel,
+        website:website,
+        ville:ville,
+        taille:taille,
+        couleur:couleur,
+        profilepic:profilepic
+    };
+    var users = "";
+    connection.query("  SELECT prenom " +
+        "               FROM users",
+        function (err, rows) {
+            users = rows;
+            for(var i = 0 ; i < users.length ; i++) {
+                logger.info('prenom: ', users[i].prenom);
+                setUsers(personne, users[i].prenom, res);
+            }
+        });
+
+});
+*/
+/*
+app.get('/getUsers', function (req, res) {
+    if(session.email == null)
+    {
+        res.redirect('/login');
+    }
+   getUsers();
+});
+*/
 
 function register(personne, res) {
     connection.query("  INSERT INTO users (email, password, nom, prenom, tel, website, sexe, birthdate, ville, taille, couleur, profilepic) " +
@@ -183,7 +321,7 @@ function register(personne, res) {
     else
         logger.error(err);
     });
-};
+}
 
 function login(username, password, res) {
     connection.query("SELECT * " +
@@ -215,8 +353,8 @@ function login(username, password, res) {
 
 function updateUser(personne, res) {
     connection.query("  UPDATE users " +
-        "               SET password = '" + personne.password + "', nom = '" + personne.nom + "', prenom = '" + personne.prenom + "', tel = '" + personne.tel + "', website = '" + personne.website + "', sexe = '" + personne.sexe + "', birthdate = '" + personne.birthdate + "', ville = '" + personne.ville + "', taille = '" + personne.taille + "', couleur = '" + personne.couleur + "', profilepic = '" + personne.profilepic + "')" +
-        "               WHERE id = " + personne.id,
+        "               SET password = '" + personne.password + "', nom = '" + personne.nom + "', prenom = '" + personne.prenom + "', tel = '" + personne.tel + "', website = '" + personne.website + "', ville = '" + personne.ville + "', taille = '" + personne.taille + "', couleur = '" + personne.couleur + "', profilepic = '" + personne.profilepic + "'" +
+        "               WHERE email = '" + session.email + "'",
         function (err) {
             if (!err) {
                 logger.info("Modification d'une personne");
@@ -224,16 +362,71 @@ function updateUser(personne, res) {
                 session.nom = personne.nom;
                 session.prenom = personne.prenom;
                 session.profilepic = personne.profilepic;
-                res.redirect('/editProfile');
+                res.redirect('/profile');
             }
             else
                 logger.error(err);
         });
 }
 
-function deleteAccount(personne, res) {
+function deleteAccount() {
     connection.query("  DELETE FROM users " +
-        "               WHERE id = " + personne.id);
+        "               WHERE email = '" + session.email + "'");
 }
-
+/*
+function paint(design) {
+    connection.query("  INSERT INTO drawings(commands, picture, idUser) " +
+        "               VALUES ('" + design.commands + "','" + design.picture +"'," + design.id + ")");
+}
+*/
+function admin(username, password, res) {
+    connection.query("SELECT * " +
+        "             FROM users " +
+        "             WHERE email = '" + username + "' AND password = '" + password + "'",
+        function (err, rows) {
+            if(!err)
+                if (rows.length > 0) {
+                    session.start = true;
+                    session.email = rows[0].email;
+                    session.prenom = rows[0].prenom;
+                    session.profilepic = rows[0].profilepic;
+                    res.redirect('/admin');
+                }
+                else
+                    res.redirect('/login');
+            else
+                logger.error(err);
+        });
+}
+/*
+function setUsers(personne, user, res) {
+    connection.query("  UPDATE users " +
+        "               SET password = '" + personne.password + "', nom = '" + personne.nom + "', prenom = '" + personne.prenom + "', tel = '" + personne.tel + "', website = '" + personne.website + "', ville = '" + personne.ville + "', taille = '" + personne.taille + "', couleur = '" + personne.couleur + "', profilepic = '" + personne.profilepic + "'" +
+        "               WHERE prenom = '" + user + "'",
+        function (err) {
+            if (!err) {
+                logger.info("Modification d'un profil utilisateur");
+                session.start = true;
+                session.nom = personne.nom;
+                session.prenom = personne.prenom;
+                session.profilepic = personne.profilepic;
+                res.redirect('/profile');
+            }
+            else
+                logger.error(err);
+        });
+}
+*/
+/*
+function getUsers(res) {
+    connection.query("  SELECT prenom " +
+        "               FROM users",
+    function (err, rows) {
+        if (!err) {
+            logger.info('La liste des utilisateurs: ', rows);
+            res.render('admin', {users: rows})
+        }
+    })
+}
+*/
 //require('./services/database')(database);
